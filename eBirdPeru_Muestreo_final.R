@@ -103,20 +103,24 @@ ggplot()+
   theme_bw() 
 
 ##### ~~ como ha cambiado en el tiempo? ~~ ####
-Peru |> 
+TimelineRecordsA <- Peru |> 
   group_by(year, month) |>
   count() |>
   ggplot(aes(x = year, y = n, fill = factor(month))) +
   geom_col() +
   scale_y_continuous(expand = c(0,0))+
   scale_fill_viridis_d()+
-  labs(x = "Year", y = "Number of checklists",
+  labs(x = "Year", 
+       tag = "A",
+       title = "All species",
+       y = "Number of checklists",
        fill = "Month")+
   theme_classic() +
   theme(legend.position = "inside",
         legend.direction = "horizontal",
         legend.position.inside = c(0.3,0.7))+
   guides(fill = guide_legend(nrow=3,byrow=TRUE))
+TimelineRecordsA
 
 ##### ~~ Cuantas localidades hay? ~~ ####
 Peru |>
@@ -450,6 +454,27 @@ PeruEndemics <- search_avesperu(splist = splist$scientific_name, max_distance = 
 
 length(unique(PeruEndemics$scientific_name)) #116 especies endémicas
 
+saveRDS(PeruEndemics, "PeruEndemics_eBird_registros_CellID.rds")
+
+##### ~~ como ha cambiado en el tiempo? ~~ ####
+TimelineRecordsB <- PeruEndemics |> 
+  group_by(year, month) |>
+  count() |>
+  ggplot(aes(x = year, y = n, fill = factor(month))) +
+  geom_col() +
+  scale_y_continuous(expand = c(0,0))+
+  scale_fill_viridis_d()+
+  labs(x = "Year", y = "Number of checklists",
+       title = "Endemic species",
+       tag = "B",
+       fill = "Month")+
+  theme_classic() +
+  theme(legend.position = "inside",
+        legend.direction = "horizontal",
+        legend.position.inside = c(0.3,0.7))+
+  guides(fill = guide_legend(nrow=3,byrow=TRUE))
+TimelineRecordsB
+
 ##### ~~~~ Cobertura y completitud del muestreo en eBird para Endemicas de Perú ~~ ####
 # Calcular (y guardar) el número de especies registradas por celda
 Se <- PeruEndemics |>
@@ -528,6 +553,8 @@ wrapped_gridPeruE <- readRDS("wrapped_gridPeru.rds") |>
                      "Other"))))) |> 
   left_join(CellObservationsE, by = "cell") |>
   filter(!is.na(Log10Lists.y))
+
+saveRDS(wrapped_gridPeruE, "wrapped_gridPeruE.rds")
 
 # llamar el mapa del mundo como base de fondo
 world1 <- sf::st_as_sf(maps::map(database = 'world', plot = FALSE, fill = TRUE))
@@ -690,6 +717,38 @@ PeruThreatened <- Peru |>
 
 length(unique(PeruThreatened$scientific_name)) #68 especies amenazadas
 
+saveRDS(PeruThreatened, "PeruThreatened_eBird_registros_CellID.rds")
+
+##### ~~ como ha cambiado en el tiempo? ~~ ####
+TimelineRecordsC <- PeruThreatened |> 
+  group_by(year, month) |>
+  count() |>
+  ggplot(aes(x = year, y = n, fill = factor(month))) +
+  geom_col() +
+  scale_y_continuous(expand = c(0,0))+
+  scale_fill_viridis_d()+
+  labs(x = "Year", y = "Number of checklists",
+       title = "Threatened species",
+       tag = "C",
+       fill = "Month")+
+  theme_classic() +
+  theme(legend.position = "inside",
+        legend.direction = "horizontal",
+        legend.position.inside = c(0.3,0.7))+
+  guides(fill = guide_legend(nrow=3,byrow=TRUE))
+
+TimelineRecordsC
+
+# Combinar figura
+ggpubr::ggarrange(TimelineRecordsA, 
+                  TimelineRecordsB,
+                  TimelineRecordsC,
+                  ncol = 3, common.legend = TRUE, 
+                  legend = "bottom")
+
+ggsave(filename = "Timeline_effort_eBird_Peru.pdf", dpi = 600,
+       height = 100, width = 200, units = "mm")
+
 ##### ~~~~ Cobertura y completitud del muestreo en eBird para Amenazadas de Perú ~~ ####
 # Calcular (y guardar) el número de especies registradas por celda
 St <- PeruThreatened |>
@@ -767,6 +826,8 @@ wrapped_gridPeruT <- readRDS("wrapped_gridPeru.rds") |>
                      "Other")))) |> 
   left_join(CellObservationsT, by = "cell") |>
   filter(!is.na(S_m))
+
+saveRDS(wrapped_gridPeruT, "wrapped_gridPeruT.rds")
 
 # llamar el mapa del mundo como base de fondo
 world1 <- sf::st_as_sf(maps::map(database = 'world', plot = FALSE, fill = TRUE))
