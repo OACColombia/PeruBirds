@@ -109,7 +109,7 @@ Fig_Sankey_Peru <- ggplot(sankey_data_n, aes(x = x,
                           next_node = next_node,
                           fill = factor(node),
                           color = factor(node),
-                          label = paste0(node, " (", pct, "%)"))) +
+                          label = paste0(node, "\n (", pct, "%)"))) +
   geom_sankey(flow.alpha = 0.5, node.color = "black", 
               show.legend = F)+
   geom_sankey_label(size = 3, color = "black", fill = "white",
@@ -149,4 +149,4 @@ Fig_Sankey_Peru <- ggplot(sankey_data_n, aes(x = x,
   theme_sankey()+
   theme(axis.text.x = element_text(hjust = -0.1, size = 12))
 
-ggsave(filename = "SankeyPlot.pdf", plot = Fig_Sankey_Peru, width = 11, height = 5)
+ggsave(filename = "SankeyPlot.jpg", plot = Fig_Sankey_Peru, width = 8, height = 5)

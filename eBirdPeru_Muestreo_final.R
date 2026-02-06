@@ -104,16 +104,18 @@ ggplot()+
 
 ##### ~~ como ha cambiado en el tiempo? ~~ ####
 TimelineRecordsA <- Peru |> 
+  filter(year != 2025) |>
   group_by(year, month) |>
   count() |>
-  ggplot(aes(x = year, y = n, fill = factor(month))) +
+  ggplot(aes(x = year, y = n/10000, 
+             fill = factor(month))) +
   geom_col() +
   scale_y_continuous(expand = c(0,0))+
   scale_fill_viridis_d()+
   labs(x = "Year", 
-       tag = "A",
-       title = "All species",
-       y = "Number of checklists",
+ #     tag = "A",
+ #      title = "All species",
+       y = "Number of checklists \n (*10,000)",
        fill = "Month")+
   theme_classic() +
   theme(legend.position = "inside",
@@ -121,6 +123,9 @@ TimelineRecordsA <- Peru |>
         legend.position.inside = c(0.3,0.7))+
   guides(fill = guide_legend(nrow=3,byrow=TRUE))
 TimelineRecordsA
+
+ggsave(filename = "TimeLinePeru.jpg",TimelineRecordsA, dpi = 300,
+       width = 140, height = 70, units = "mm")
 
 ##### ~~ Cuantas localidades hay? ~~ ####
 Peru |>
@@ -294,7 +299,7 @@ ggplot() +
         legend.direction = "vertical",
         legend.box.background = element_rect(colour = "black")) 
 
-ggsave(filename = "Completeness_eBird_Peru.pdf", dpi = 600,
+ggsave(filename = "Completeness_eBird_Peru.jpg", dpi = 600,
        height = 170, width = 160, units = "mm")
 
 # Solo criterios laxo (>0.8) a estricto (>0.9)
@@ -350,7 +355,7 @@ ggplot() +
         legend.direction = "vertical",
         legend.box.background = element_rect(colour = "black")) 
 
-ggsave(filename = "List_log10_effort_eBird_Peru.pdf", dpi = 600,
+ggsave(filename = "List_log10_effort_eBird_Peru.jpg", dpi = 300,
        height = 170, width = 160, units = "mm")
 
 ##### ~~~~ Mapa de riqueza en Perú ~~ ####
@@ -384,7 +389,7 @@ ggplot() +
         legend.direction = "vertical",
         legend.box.background = element_rect(colour = "black")) 
 
-ggsave(filename = "SppRichness_eBird_Peru.pdf", dpi = 600,
+ggsave(filename = "SppRichness_eBird_Peru.jpg", dpi = 600,
        height = 170, width = 160, units = "mm")
 
 ##### ~~~~ Mapa de riqueza (log10) en Perú ~~ ####
@@ -418,7 +423,7 @@ ggplot() +
         legend.direction = "vertical",
         legend.box.background = element_rect(colour = "black"))
 
-ggsave(filename = "SppRichness_log10_eBird_Peru.pdf", dpi = 600,
+ggsave(filename = "SppRichness_log10_eBird_Peru.jpg", dpi = 600,
        height = 170, width = 160, units = "mm")
 
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
@@ -588,7 +593,7 @@ ggplot() +
         legend.direction = "vertical",
         legend.box.background = element_rect(colour = "black")) 
 
-ggsave(filename = "Completeness_Endemics_eBird_Peru.pdf", dpi = 600,
+ggsave(filename = "Completeness_Endemics_eBird_Peru.jpg", dpi = 600,
        height = 170, width = 160, units = "mm")
 
 # Solo criterios laxo (>0.8) a estricto (>0.9)
@@ -644,7 +649,7 @@ ggplot() +
         legend.direction = "vertical",
         legend.box.background = element_rect(colour = "black")) 
 
-ggsave(filename = "List_log10_effort_Endemics_eBird_Peru.pdf", dpi = 600,
+ggsave(filename = "List_log10_effort_Endemics_eBird_Peru.jpg", dpi = 600,
        height = 170, width = 160, units = "mm")
 
 ##### ~~~~ Mapa de riqueza en Perú (endémicas) ~~ ####
@@ -682,7 +687,7 @@ ggplot() +
         legend.direction = "vertical",
         legend.box.background = element_rect(colour = "black")) 
 
-ggsave(filename = "SppRichness_Endemic_eBird_Peru.pdf", dpi = 600,
+ggsave(filename = "SppRichness_Endemic_eBird_Peru.jpg", dpi = 600,
        height = 170, width = 160, units = "mm")
 
 
@@ -746,7 +751,7 @@ ggpubr::ggarrange(TimelineRecordsA,
                   ncol = 3, common.legend = TRUE, 
                   legend = "bottom")
 
-ggsave(filename = "Timeline_effort_eBird_Peru.pdf", dpi = 600,
+ggsave(filename = "Timeline_effort_eBird_Peru.jpg", dpi = 600,
        height = 100, width = 200, units = "mm")
 
 ##### ~~~~ Cobertura y completitud del muestreo en eBird para Amenazadas de Perú ~~ ####
@@ -859,7 +864,7 @@ ggplot() +
         legend.direction = "vertical",
         legend.box.background = element_rect(colour = "black")) 
 
-ggsave(filename = "Completeness_Threatened_eBird_Peru.pdf", dpi = 600,
+ggsave(filename = "Completeness_Threatened_eBird_Peru.jpg", dpi = 600,
        height = 170, width = 160, units = "mm")
 
 # Solo criterios laxo (>0.8) a estricto (>0.9)
@@ -915,7 +920,7 @@ ggplot() +
         legend.direction = "vertical",
         legend.box.background = element_rect(colour = "black")) 
 
-ggsave(filename = "List_log10_effort_Threatened_eBird_Peru.pdf", dpi = 600,
+ggsave(filename = "List_log10_effort_Threatened_eBird_Peru.jpg", dpi = 600,
        height = 170, width = 160, units = "mm")
 
 ##### ~~~~ Mapa de riqueza en Perú (amenazadas) ~~ ####
@@ -945,7 +950,7 @@ ggplot() +
         legend.direction = "vertical",
         legend.box.background = element_rect(colour = "black")) 
 
-ggsave(filename = "SppRichness_Threatened_eBird_Peru.pdf", dpi = 600,
+ggsave(filename = "SppRichness_Threatened_eBird_Peru.jpg", dpi = 600,
        height = 170, width = 160, units = "mm")
 
 # End of code ####
