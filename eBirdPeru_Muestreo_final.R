@@ -107,15 +107,16 @@ TimelineRecordsA <- Peru |>
   filter(year != 2025) |>
   group_by(year, month) |>
   count() |>
-  ggplot(aes(x = year, y = n/10000, 
-             fill = factor(month))) +
+  ggplot(aes(x = year, y = n/1000, 
+             fill = factor(month.abb[month], 
+                            levels = month.abb))) +
   geom_col() +
   scale_y_continuous(expand = c(0,0))+
-  scale_fill_viridis_d()+
+  scale_fill_manual(values = hcl.colors(12, "Temps")) +
   labs(x = "Year", 
- #     tag = "A",
+     tag = "A",
  #      title = "All species",
-       y = "Number of checklists \n (*10,000)",
+       y = "Number of checklists \n (*1,000)",
        fill = "Month")+
   theme_classic() +
   theme(legend.position = "inside",
@@ -124,8 +125,61 @@ TimelineRecordsA <- Peru |>
   guides(fill = guide_legend(nrow=3,byrow=TRUE))
 TimelineRecordsA
 
-ggsave(filename = "TimeLinePeru.jpg",TimelineRecordsA, dpi = 300,
-       width = 140, height = 70, units = "mm")
+Peru |>
+  filter(year != 2025) |>
+  count(year, month) |>
+  ggplot(aes(year, month, fill = n/1000)) +
+  geom_tile(alpha = 0.9) +
+  scale_y_continuous(
+    breaks = 1:12,
+    labels = month.abb
+  ) +
+  scale_fill_viridis_c() +
+  labs(x = "Year", 
+       #tag = "a)",
+       #      title = "All species",
+       fill = "Number of checklists \n (*1,000)",
+       y = "Month")+
+  theme_classic() +
+  theme(legen)
+
+
+#ggsave(filename = "TimeLinePeru.jpg",TimelineRecordsA, dpi = 300,
+#       width = 140, height = 70, units = "mm")
+
+# Por mes
+
+TimelineRecordsB <- Peru |> 
+  filter(year != 2025) |>
+  group_by(year, month) |>
+  count() |>
+  ggplot(aes(x = factor(month.abb[month], 
+                        levels = month.abb), y = n/1000, 
+             fill = factor(year),
+             color = factor(year))) +
+  geom_col(alpha = 0.8) +
+  scale_y_continuous(expand = c(0,0))+
+  scale_color_manual(values = hcl.colors(25, "Viridis")) +
+  scale_fill_manual(values = hcl.colors(25, "Viridis")) +
+  labs(x = "Year", 
+       tag = "b)",
+       #      title = "All species",
+       y = "Number of checklists \n (*1,000)",
+       fill = "Year", 
+       color = "Year")+
+  theme_classic() +
+  theme(legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.position.inside = c(0.3,0.7))+
+  guides(fill = guide_legend(ncol=9,byrow=TRUE), 
+         color = guide_legend(ncol=9,byrow=TRUE))
+TimelineRecordsB
+
+library(patchwork)
+TimelineRecordsA / TimelineRecordsB
+
+ggsave(filename = "PostReview/TemporalDynamiceeBirdPeru_.jpg", dpi = 300, width = 190, height = 180, units = "mm")
+
 
 ##### ~~ Cuantas localidades hay? ~~ ####
 Peru |>
@@ -250,57 +304,53 @@ CellObservations$cell <- as.character(CellObservations$cell)
 wrapped_gridPeru <- readRDS("wrapped_gridPeru.rds") |>
   left_join(Completeness, by = "cell") |> 
   mutate(C_m = round(C_m,2), 
-         C_m_range = ifelse((C_m >= 0 & C_m <= 0.2), "0.00-0.20",
-                     ifelse((C_m >= 0.21 & C_m <= 0.4), "0.21-0.40", 
-                     ifelse((C_m >= 0.41 & C_m <= 0.6), "0.41-0.60", 
-                     ifelse((C_m >= 0.61 & C_m <= 0.8), "0.61-0.80", 
-                     ifelse((C_m >= 0.81 & C_m <= 0.9), "0.81-0.90", 
-                     ifelse((C_m >= 0.91 & C_m <= 1.0), "0.91-1.00", 
-                                   "Other")))))),
-         S_m_range = ifelse((S_m >= 0 & S_m <= 15), "1-15",
-                     ifelse((S_m >= 16 & S_m <= 36), "16-36", 
-                     ifelse((S_m >= 37 & S_m <= 63), "37-63", 
-                     ifelse((S_m >= 64 & S_m <= 77), "64-77", 
-                     ifelse((S_m >= 78 & S_m <= 781), "77-781", 
-                     "Other")))))) |> 
+         C_m_range = ifelse((C_m >= 0 & C_m <= 0.4), "0.0-0.4",
+                     ifelse((C_m >= 0.41 & C_m <= 0.8), "0.4-0.8", 
+                     ifelse((C_m >= 0.81 & C_m <= 1.0), "0.8-1.0", 
+                                   "Other"))),
+         S_m_range = ifelse((S_m >= 0 & S_m <= 100), "1-100",
+                     ifelse((S_m >= 101 & S_m <= 400), "101-400", 
+                     ifelse((S_m >= 401 & S_m <= 800), "401-800", 
+                     "Other")))) |> 
   left_join(CellObservations, by = "cell")
   
 # llamar el mapa del mundo como base de fondo
 world1 <- sf::st_as_sf(maps::map(database = 'world', plot = FALSE, fill = TRUE))
 
 ##### ~~~~ Mapa de completitud en Perú ~~ ####
-ggplot() +
+CT <- ggplot() +
   geom_sf(data = world1, fill = "#fbfbfb")+
   geom_sf(data=wrapped_gridPeru,
           aes(fill = C_m_range,
               color = C_m_range)) +
   coord_sf(xlim = c(-81.52, -68.65),
            ylim =  c(-0.11, -18.89)) +
-  scale_fill_manual(values = c("#FFFFFF50",
+  scale_fill_manual(values = c(#"#FFFFFF50",
                                "#86ADC670",
-                               "#6396B670",
+  #                             "#6396B670",
                                "#4A7C9D70",
-                               "#39617A",
+  #                              "#39617A",
                                "#1E3F66"))+
-  scale_color_manual(values = c("#FFFFFF50",
+  scale_color_manual(values = c(#"#FFFFFF50",
                                "#86ADC670",
-                               "#6396B670",
+    #                           "#6396B670",
                                "#4A7C9D70",
-                               "#39617A",
+  #                             "#39617A",
                                "#1E3F66"))+
-  labs(y = "Latitude",
-       x = "Longitude",       
-       title = "eBird effort in Peru",
-       subtitle = bquote(cells~of~"~100"~km^2),
-       color = "Completeness",
-       fill = "Completeness") +
+  labs(y = "",
+       x = "",       
+       tag = "a)") +
+  scale_x_continuous(breaks = seq(-180, 180, by = 5)) +
+  scale_y_continuous(breaks = seq(-90, 90, by = 5)) +
   theme_classic()+
-  theme(legend.position = "right",
+  theme(legend.position = "inside",
+        legend.position.inside = c(0.2, 0.2),
         legend.direction = "vertical",
-        legend.box.background = element_rect(colour = "black")) 
-
-ggsave(filename = "Completeness_eBird_Peru.jpg", dpi = 600,
-       height = 170, width = 160, units = "mm")
+        legend.title = element_blank(),
+        legend.background = element_rect(colour = NA, fill = NA), 
+        axis.text.x = element_blank(), 
+        axis.title.x = element_blank()) 
+CT
 
 # Solo criterios laxo (>0.8) a estricto (>0.9)
 ggplot() +
@@ -325,9 +375,9 @@ ggplot() +
 ##### ~~~~ Mapa de número de listas (log10) en Perú ~~ ####
 summary(wrapped_gridPeru$n_lists)
 
-my_breaks <- c(1,9,90,900,8960)
+my_breaks <- c(1,90,8960)
 
-ggplot() +
+LT <- ggplot() +
   geom_sf(data = world1, fill = "#fbfbfb")+
   geom_sf(data=wrapped_gridPeru,
           aes(color = n_lists, 
@@ -344,53 +394,60 @@ ggplot() +
                        trans = "log", 
                        breaks = my_breaks,
                        labels = my_breaks)+
-  labs(y = "Latitude",
-       x = "Longitude",       
-       title = "eBird effort in Peru",
-       subtitle = bquote(cells~of~"~100"~km^2),
-       color = expression(Log["10"]~"lists"),
-       fill = expression(Log["10"]~"lists")) +
+  scale_x_continuous(breaks = seq(-180, 180, by = 5)) +
+  scale_y_continuous(breaks = seq(-90, 90, by = 5)) +
+  labs(y = "",
+       x = "",       
+       tag = "b)") +
   theme_classic()+
-  theme(legend.position = "right",
+  theme(legend.position = "inside",
+        legend.position.inside = c(0.2, 0.2),
         legend.direction = "vertical",
-        legend.box.background = element_rect(colour = "black")) 
-
-ggsave(filename = "List_log10_effort_eBird_Peru.jpg", dpi = 300,
-       height = 170, width = 160, units = "mm")
+        legend.title = element_blank(),
+        legend.background = element_rect(colour = NA, fill = NA), 
+        axis.text.x = element_blank(), 
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank(), 
+        axis.text.y = element_blank()) 
+LT
 
 ##### ~~~~ Mapa de riqueza en Perú ~~ ####
 summary(wrapped_gridPeru$S_m)
 
-ggplot() +
+ST <- ggplot() +
   geom_sf(data = world1, fill = "#fbfbfb")+
   geom_sf(data=wrapped_gridPeru,
           aes(fill = S_m_range,
               color = S_m_range)) +
   coord_sf(xlim = c(-81.52, -68.65),
            ylim =  c(-0.11, -18.89)) +
-  scale_fill_manual(values = c("#FFFFFF50",
+  scale_fill_manual(values = c(#"#FFFFFF50",
                                "#A1BE7530",
-                               "#8AAE5250",
+                               #"#8AAE5250",
                                "#6F8C4170",
                                "#617A3990"))+
-  scale_color_manual(values = c("#FFFFFF50",
+  scale_color_manual(values = c(#"#FFFFFF50",
                                 "#A1BE7540",
-                                "#8AAE5260",
+                                #"#8AAE5260",
                                 "#6F8C4180",
                                 "#617A39"))+
-  labs(y = "Latitude",
-       x = "Longitude",       
-       title = "eBird effort in Peru",
-       subtitle = bquote(cells~of~"~100"~km^2),
-       color = "Species richness",
-       fill = "Species richness") +
+  scale_x_continuous(breaks = seq(-180, 180, by = 5)) +
+  scale_y_continuous(breaks = seq(-90, 90, by = 5)) +
+  labs(y = "",
+       x = "",
+       tag = "c)") +
   theme_classic()+
-  theme(legend.position = "right",
+  theme(legend.position = "inside",
+        legend.position.inside = c(0.2, 0.2),
         legend.direction = "vertical",
-        legend.box.background = element_rect(colour = "black")) 
+        legend.title = element_blank(),
+        legend.background = element_rect(colour = NA, fill = NA), 
+        axis.text.x = element_blank(), 
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank(), 
+        axis.text.y = element_blank()) 
 
-ggsave(filename = "SppRichness_eBird_Peru.jpg", dpi = 600,
-       height = 170, width = 160, units = "mm")
+ST
 
 ##### ~~~~ Mapa de riqueza (log10) en Perú ~~ ####
 my_breaks <- c(1,8,80,781)
@@ -422,9 +479,6 @@ ggplot() +
   theme(legend.position = "right",
         legend.direction = "vertical",
         legend.box.background = element_rect(colour = "black"))
-
-ggsave(filename = "SppRichness_log10_eBird_Peru.jpg", dpi = 600,
-       height = 170, width = 160, units = "mm")
 
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
 #### ~~~~ Especies endémicas en Perú ~~~~ ####
@@ -462,7 +516,7 @@ length(unique(PeruEndemics$scientific_name)) #116 especies endémicas
 saveRDS(PeruEndemics, "PeruEndemics_eBird_registros_CellID.rds")
 
 ##### ~~ como ha cambiado en el tiempo? ~~ ####
-TimelineRecordsB <- PeruEndemics |> 
+TimelineRecordsEndemics <- PeruEndemics |> 
   group_by(year, month) |>
   count() |>
   ggplot(aes(x = year, y = n, fill = factor(month))) +
@@ -478,7 +532,7 @@ TimelineRecordsB <- PeruEndemics |>
         legend.direction = "horizontal",
         legend.position.inside = c(0.3,0.7))+
   guides(fill = guide_legend(nrow=3,byrow=TRUE))
-TimelineRecordsB
+TimelineRecordsEndemics
 
 ##### ~~~~ Cobertura y completitud del muestreo en eBird para Endemicas de Perú ~~ ####
 # Calcular (y guardar) el número de especies registradas por celda
@@ -544,18 +598,14 @@ CellObservationsE$cell <- as.character(CellObservationsE$cell)
 wrapped_gridPeruE <- readRDS("wrapped_gridPeru.rds") |>
   left_join(CompletenessE, by = "cell") |> 
   mutate(C_m = round(C_m,2), 
-         C_m_range = ifelse((C_m >= 0 & C_m <= 0.2), "0.00-0.20",
-                     ifelse((C_m >= 0.21 & C_m <= 0.4), "0.21-0.40", 
-                     ifelse((C_m >= 0.41 & C_m <= 0.6), "0.41-0.60", 
-                     ifelse((C_m >= 0.61 & C_m <= 0.8), "0.61-0.80", 
-                     ifelse((C_m >= 0.81 & C_m <= 0.9), "0.81-0.90", 
-                     ifelse((C_m >= 0.91 & C_m <= 1.0), "0.91-1.00", 
-                     "Other")))))),
+         C_m_range = ifelse((C_m >= 0 & C_m <= 0.4), "0.0-0.4",
+                     ifelse((C_m >= 0.41 & C_m <= 0.8), "0.4-0.8", 
+                     ifelse((C_m >= 0.81 & C_m <= 1.0), "0.8-1.0", 
+                     "Other"))),
          S_m_range = ifelse((S_m >= 0 & S_m <= 5), "1-5",
-                     ifelse((S_m >= 6 & S_m <= 10), "6-10", 
-                     ifelse((S_m >= 11 & S_m <= 15), "11-15", 
+                     ifelse((S_m >= 6 & S_m <= 15), "6-15", 
                      ifelse((S_m >= 16 & S_m <= 22), "16-22", 
-                     "Other"))))) |> 
+                     "Other")))) |> 
   left_join(CellObservationsE, by = "cell") |>
   filter(!is.na(Log10Lists.y))
 
@@ -565,36 +615,41 @@ saveRDS(wrapped_gridPeruE, "wrapped_gridPeruE.rds")
 world1 <- sf::st_as_sf(maps::map(database = 'world', plot = FALSE, fill = TRUE))
 
 ##### ~~~~ Mapa de completitud en Perú (endémicas) ~~ ####
-ggplot() +
+CE <- ggplot() +
   geom_sf(data = world1, fill = "#fbfbfb")+
   geom_sf(data=wrapped_gridPeruE,
           aes(fill = C_m_range,
               color = C_m_range)) +
   coord_sf(xlim = c(-81.52, -68.65),
            ylim =  c(-0.11, -18.89)) +
-  scale_fill_manual(values = c("#86ADC670",
-                               "#6396B670",
-                               "#4A7C9D70",
-                               "#39617A",
-                               "#1E3F66"))+
-  scale_color_manual(values = c("#86ADC670",
-                                "#6396B670",
-                                "#4A7C9D70",
-                                "#39617A",
-                                "#1E3F66"))+
+  scale_fill_manual(values = c(#"#FFFFFF50",
+    "#86ADC670",
+    #                             "#6396B670",
+    "#4A7C9D70",
+    #                              "#39617A",
+    "#1E3F66"))+
+  scale_color_manual(values = c(#"#FFFFFF50",
+    "#86ADC670",
+    #                           "#6396B670",
+    "#4A7C9D70",
+    #                             "#39617A",
+    "#1E3F66"))+
+  scale_x_continuous(breaks = seq(-180, 180, by = 5)) +
+  scale_y_continuous(breaks = seq(-90, 90, by = 5)) +
   labs(y = "Latitude",
-       x = "Longitude",       
-       title = "eBird effort in Peru (endemics)",
-       subtitle = bquote(cells~of~"~100"~km^2),
-       color = "Completeness",
-       fill = "Completeness") +
+       x = "",       
+       tag = "d)") +
   theme_classic()+
-  theme(legend.position = "right",
+  theme(legend.position = "inside",
+        legend.position.inside = c(0.2, 0.2),
         legend.direction = "vertical",
-        legend.box.background = element_rect(colour = "black")) 
+        legend.title = element_blank(),
+        legend.background = element_rect(colour = NA, fill = NA), 
+        axis.text.x = element_blank(), 
+        axis.title.x = element_blank()) 
 
-ggsave(filename = "Completeness_Endemics_eBird_Peru.jpg", dpi = 600,
-       height = 170, width = 160, units = "mm")
+CE  
+
 
 # Solo criterios laxo (>0.8) a estricto (>0.9)
 ggplot() +
@@ -619,9 +674,9 @@ ggplot() +
 ##### ~~~~ Mapa de número de listas (log10) en Perú (endémicas) ~~ ####
 summary(wrapped_gridPeruE$n_lists)
 
-my_breaks <- c(1,2,20,200,1492)
+my_breaks <- c(1,50,1492)
 
-ggplot() +
+LE <- ggplot() +
   geom_sf(data = world1, fill = "#fbfbfb")+
   geom_sf(data=wrapped_gridPeruE,
           aes(color = n_lists, 
@@ -638,58 +693,66 @@ ggplot() +
                        trans = "log", 
                        breaks = my_breaks,
                        labels = my_breaks)+
-  labs(y = "Latitude",
-       x = "Longitude",       
-       title = "eBird effort in Peru (endemics)",
-       subtitle = bquote(cells~of~"~100"~km^2),
-       color = expression(Log["10"]~"lists"),
-       fill = expression(Log["10"]~"lists")) +
+  scale_x_continuous(breaks = seq(-180, 180, by = 5)) +
+  scale_y_continuous(breaks = seq(-90, 90, by = 5)) +
+  labs(y = "",
+       x = "",       
+       tag = "e)") +
   theme_classic()+
-  theme(legend.position = "right",
+  theme(legend.position = "inside",
+        legend.position.inside = c(0.2, 0.2),
         legend.direction = "vertical",
-        legend.box.background = element_rect(colour = "black")) 
+        legend.title = element_blank(),
+        legend.background = element_rect(colour = NA, fill = NA), 
+        axis.text.x = element_blank(), 
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank(), 
+        axis.text.y = element_blank()) 
 
-ggsave(filename = "List_log10_effort_Endemics_eBird_Peru.jpg", dpi = 600,
-       height = 170, width = 160, units = "mm")
+LE 
 
 ##### ~~~~ Mapa de riqueza en Perú (endémicas) ~~ ####
 summary(wrapped_gridPeruE$S_m)
 
 wrapped_gridPeruE$S_m_range <- factor(wrapped_gridPeruE$S_m_range,
                                          levels = c("1-5",
-                                                    "6-10",
-                                                    "11-15",
+                                                    "6-15",
                                                     "16-22"))
 
-ggplot() +
+SE <- ggplot() +
   geom_sf(data = world1, fill = "#fbfbfb")+
   geom_sf(data=wrapped_gridPeruE,
           aes(fill = S_m_range,
               color = S_m_range)) +
   coord_sf(xlim = c(-81.52, -68.65),
            ylim =  c(-0.11, -18.89)) +
-  scale_fill_manual(values = c("#A1BE7530",
-                               "#8AAE5250",
-                               "#6F8C4170",
-                               "#617A3990"))+
-  scale_color_manual(values = c("#A1BE7540",
-                                "#8AAE5260",
-                                "#6F8C4180",
-                                "#617A39"))+
-  labs(y = "Latitude",
-       x = "Longitude",       
-       title = "eBird effort in Peru (endemics)",
-       subtitle = bquote(cells~of~"~100"~km^2),
-       color = "Endemic \nspecies richness",
-       fill = "Endemic \nspecies richness") +
+  scale_fill_manual(values = c(#"#FFFFFF50",
+    "#A1BE7530",
+    #"#8AAE5250",
+    "#6F8C4170",
+    "#617A3990"))+
+  scale_color_manual(values = c(#"#FFFFFF50",
+    "#A1BE7530",
+    #"#8AAE5250",
+    "#6F8C4170",
+    "#617A3990"))+
+  scale_x_continuous(breaks = seq(-180, 180, by = 5)) +
+  scale_y_continuous(breaks = seq(-90, 90, by = 5)) +
+  labs(y = "",
+       x = "",       
+       tag = "f)") +
   theme_classic()+
-  theme(legend.position = "right",
+  theme(legend.position = "inside",
+        legend.position.inside = c(0.2, 0.2),
         legend.direction = "vertical",
-        legend.box.background = element_rect(colour = "black")) 
+        legend.title = element_blank(),
+        legend.background = element_rect(colour = NA, fill = NA), 
+        axis.text.x = element_blank(), 
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank(), 
+        axis.text.y = element_blank()) 
 
-ggsave(filename = "SppRichness_Endemic_eBird_Peru.jpg", dpi = 600,
-       height = 170, width = 160, units = "mm")
-
+SE
 
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
 #### ~~~~ Especies amenazadas en Perú - AviList IUCN ~~~~ ####
@@ -725,7 +788,7 @@ length(unique(PeruThreatened$scientific_name)) #68 especies amenazadas
 saveRDS(PeruThreatened, "PeruThreatened_eBird_registros_CellID.rds")
 
 ##### ~~ como ha cambiado en el tiempo? ~~ ####
-TimelineRecordsC <- PeruThreatened |> 
+TimelineRecordsThreat <- PeruThreatened |> 
   group_by(year, month) |>
   count() |>
   ggplot(aes(x = year, y = n, fill = factor(month))) +
@@ -742,17 +805,8 @@ TimelineRecordsC <- PeruThreatened |>
         legend.position.inside = c(0.3,0.7))+
   guides(fill = guide_legend(nrow=3,byrow=TRUE))
 
-TimelineRecordsC
+TimelineRecordsThreat
 
-# Combinar figura
-ggpubr::ggarrange(TimelineRecordsA, 
-                  TimelineRecordsB,
-                  TimelineRecordsC,
-                  ncol = 3, common.legend = TRUE, 
-                  legend = "bottom")
-
-ggsave(filename = "Timeline_effort_eBird_Peru.jpg", dpi = 600,
-       height = 100, width = 200, units = "mm")
 
 ##### ~~~~ Cobertura y completitud del muestreo en eBird para Amenazadas de Perú ~~ ####
 # Calcular (y guardar) el número de especies registradas por celda
@@ -818,13 +872,10 @@ CellObservationsT$cell <- as.character(CellObservationsT$cell)
 wrapped_gridPeruT <- readRDS("wrapped_gridPeru.rds") |>
   left_join(CompletenessT, by = "cell") |> 
   mutate(C_m = round(C_m,2), 
-         C_m_range = ifelse((C_m >= 0 & C_m <= 0.2), "0.00-0.20",
-                     ifelse((C_m >= 0.21 & C_m <= 0.4), "0.21-0.40", 
-                     ifelse((C_m >= 0.41 & C_m <= 0.6), "0.41-0.60", 
-                     ifelse((C_m >= 0.61 & C_m <= 0.8), "0.61-0.80", 
-                     ifelse((C_m >= 0.81 & C_m <= 0.9), "0.81-0.90", 
-                     ifelse((C_m >= 0.91 & C_m <= 1.0), "0.91-1.00", 
-                     "Other")))))),
+         C_m_range = ifelse((C_m >= 0 & C_m <= 0.4), "0.0-0.4",
+                     ifelse((C_m >= 0.41 & C_m <= 0.8), "0.4-0.8", 
+                     ifelse((C_m >= 0.81 & C_m <= 1.0), "0.8-1.0", 
+                     "Other"))),
          S_m_range = ifelse((S_m >= 0 & S_m <= 4), "1-4",
                      ifelse((S_m >= 5 & S_m <= 8), "5-8", 
                      ifelse((S_m >= 9 & S_m <= 13), "9-13", 
@@ -838,34 +889,39 @@ saveRDS(wrapped_gridPeruT, "wrapped_gridPeruT.rds")
 world1 <- sf::st_as_sf(maps::map(database = 'world', plot = FALSE, fill = TRUE))
 
 ##### ~~~~ Mapa de completitud en Perú (endémicas) ~~ ####
-ggplot() +
+CTh <- ggplot() +
   geom_sf(data = world1, fill = "#fbfbfb")+
   geom_sf(data=wrapped_gridPeruT,
           aes(fill = C_m_range,
               color = C_m_range)) +
   coord_sf(xlim = c(-81.52, -68.65),
            ylim =  c(-0.11, -18.89)) +
-  scale_fill_manual(values = c("#6396B670",
-                               "#4A7C9D70",
-                               "#39617A",
-                               "#1E3F66"))+
-  scale_color_manual(values = c("#6396B670",
-                                "#4A7C9D70",
-                                "#39617A",
-                                "#1E3F66"))+
-  labs(y = "Latitude",
-       x = "Longitude",       
-       title = "eBird effort in Peru (threatened)",
-       subtitle = bquote(cells~of~"~100"~km^2),
-       color = "Completeness",
-       fill = "Completeness") +
+  scale_fill_manual(values = c(#"#FFFFFF50",
+    #"#86ADC670",
+    #                             "#6396B670",
+    "#4A7C9D70",
+    #                              "#39617A",
+    "#1E3F66"))+
+  scale_color_manual(values = c(#"#FFFFFF50",
+    #"#86ADC670",
+    #                             "#6396B670",
+    "#4A7C9D70",
+    #                              "#39617A",
+    "#1E3F66"))+
+  scale_x_continuous(breaks = seq(-180, 180, by = 5)) +
+  scale_y_continuous(breaks = seq(-90, 90, by = 5)) +
+  labs(y = "",
+       x = "",       
+       tag = "g)") +
   theme_classic()+
-  theme(legend.position = "right",
+  theme(legend.position = "inside",
+        legend.position.inside = c(0.2, 0.2),
         legend.direction = "vertical",
-        legend.box.background = element_rect(colour = "black")) 
+        legend.title = element_blank(),
+        legend.background = element_rect(colour = NA, fill = NA)) 
 
-ggsave(filename = "Completeness_Threatened_eBird_Peru.jpg", dpi = 600,
-       height = 170, width = 160, units = "mm")
+CTh
+
 
 # Solo criterios laxo (>0.8) a estricto (>0.9)
 ggplot() +
@@ -890,11 +946,11 @@ ggplot() +
 ##### ~~~~ Mapa de número de listas (log10) en Perú (amenazadas) ~~ ####
 summary(wrapped_gridPeruT$n_lists)
 
-my_breaks <- c(1,15,150,1569)
+my_breaks <- c(1,50,1569)
 
-ggplot() +
+LTh <- ggplot() +
   geom_sf(data = world1, fill = "#fbfbfb")+
-  geom_sf(data=wrapped_gridPeruE,
+  geom_sf(data=wrapped_gridPeruT,
           aes(color = n_lists, 
               fill = n_lists)) +
   coord_sf(xlim = c(-81.52, -68.65),
@@ -909,48 +965,61 @@ ggplot() +
                        trans = "log", 
                        breaks = my_breaks,
                        labels = my_breaks)+
-  labs(y = "Latitude",
+  scale_x_continuous(breaks = seq(-180, 180, by = 5)) +
+  scale_y_continuous(breaks = seq(-90, 90, by = 5)) + 
+  labs(y = "",
        x = "Longitude",       
-       title = "eBird effort in Peru (threatened)",
-       subtitle = bquote(cells~of~"~100"~km^2),
-       color = expression(Log["10"]~"lists"),
-       fill = expression(Log["10"]~"lists")) +
+       tag = "h)") +
   theme_classic()+
-  theme(legend.position = "right",
+  theme(legend.position = "inside",
+        legend.position.inside = c(0.2, 0.2),
         legend.direction = "vertical",
-        legend.box.background = element_rect(colour = "black")) 
+        legend.title = element_blank(),
+        legend.background = element_rect(colour = NA, fill = NA), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank()) 
 
-ggsave(filename = "List_log10_effort_Threatened_eBird_Peru.jpg", dpi = 600,
-       height = 170, width = 160, units = "mm")
+LTh
 
 ##### ~~~~ Mapa de riqueza en Perú (amenazadas) ~~ ####
 summary(wrapped_gridPeruT$S_m)
 
-ggplot() +
+STh <- ggplot() +
   geom_sf(data = world1, fill = "#fbfbfb")+
   geom_sf(data=wrapped_gridPeruT,
           aes(fill = S_m_range,
               color = S_m_range)) +
   coord_sf(xlim = c(-81.52, -68.65),
            ylim =  c(-0.11, -18.89)) +
-  scale_fill_manual(values = c("#A1BE7530",
-                               "#8AAE5250",
-                               "#617A3990"))+
-  scale_color_manual(values = c("#A1BE7540",
-                                "#8AAE5260",
+  scale_fill_manual(values = c("#A1BE7540",
+                               "#8AAE5260",
+                               "#617A3999"))+
+  scale_color_manual(values = c("#A1BE7550",
+                                "#8AAE5270",
                                 "#617A39"))+
-  labs(y = "Latitude",
-       x = "Longitude",       
-       title = "eBird effort in Peru (threatened)",
-       subtitle = bquote(cells~of~"~100"~km^2),
-       color = "Threatened \nspecies richness",
-       fill = "Threatened \nspecies richness") +
+  scale_x_continuous(breaks = seq(-180, 180, by = 5)) +
+  scale_y_continuous(breaks = seq(-90, 90, by = 5)) +
+  labs(y = "",
+       x = "",       
+       tag = "i)") +
   theme_classic()+
-  theme(legend.position = "right",
+  theme(legend.position = "inside",
+        legend.position.inside = c(0.2, 0.2),
         legend.direction = "vertical",
-        legend.box.background = element_rect(colour = "black")) 
+        legend.title = element_blank(),
+        legend.background = element_rect(colour = NA, fill = NA), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank()) 
 
-ggsave(filename = "SppRichness_Threatened_eBird_Peru.jpg", dpi = 600,
-       height = 170, width = 160, units = "mm")
+STh
 
+# Combined figure 3x3 ####
+
+library(patchwork)
+plot_list <- list(CT, LT, ST, 
+                  CE, LE, SE,
+                  CTh, LTh, STh)
+wrap_plots(plot_list, ncol = 3, nrow = 3)
+ggsave(filename = "PostReview/eBird_Peru_a_i.jpg", dpi = 300,
+       height = 290, width = 210, units = "mm")
 # End of code ####
