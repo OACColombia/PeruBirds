@@ -114,7 +114,7 @@ TimelineRecordsA <- Peru |>
   scale_y_continuous(expand = c(0,0))+
   scale_fill_manual(values = hcl.colors(12, "Temps")) +
   labs(x = "Year", 
-     tag = "A",
+     tag = "a)",
  #      title = "All species",
        y = "Number of checklists \n (*1,000)",
        fill = "Month")+
@@ -124,24 +124,6 @@ TimelineRecordsA <- Peru |>
         legend.position.inside = c(0.3,0.7))+
   guides(fill = guide_legend(nrow=3,byrow=TRUE))
 TimelineRecordsA
-
-Peru |>
-  filter(year != 2025) |>
-  count(year, month) |>
-  ggplot(aes(year, month, fill = n/1000)) +
-  geom_tile(alpha = 0.9) +
-  scale_y_continuous(
-    breaks = 1:12,
-    labels = month.abb
-  ) +
-  scale_fill_viridis_c() +
-  labs(x = "Year", 
-       #tag = "a)",
-       #      title = "All species",
-       fill = "Number of checklists \n (*1,000)",
-       y = "Month")+
-  theme_classic() +
-  theme(legen)
 
 
 #ggsave(filename = "TimeLinePeru.jpg",TimelineRecordsA, dpi = 300,
@@ -158,9 +140,11 @@ TimelineRecordsB <- Peru |>
              fill = factor(year),
              color = factor(year))) +
   geom_col(alpha = 0.8) +
-  scale_y_continuous(expand = c(0,0))+
-  scale_color_manual(values = hcl.colors(25, "Viridis")) +
-  scale_fill_manual(values = hcl.colors(25, "Viridis")) +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_color_viridis_d(direction = -1) +
+  scale_fill_viridis_d(direction = -1) +
+#  scale_color_manual(values = hcl.colors(25, "Viridis")) +
+#  scale_fill_manual(values = hcl.colors(25, "Viridis")) +
   labs(x = "Year", 
        tag = "b)",
        #      title = "All species",
